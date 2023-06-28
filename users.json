@@ -1,0 +1,23 @@
+[
+    {
+    "username": "user",
+    "password": "1234",
+    "role": "user",
+    "fullname":"User",
+    "access" : "R"
+},
+{
+    "username": "pmo",
+    "password": "1234",
+    "role": "pmo",
+    "fullname":"PMO",
+    "access" : "UR"
+},
+{
+    "username": "admin",
+    "password": "1234",
+    "role": "admin",
+    "fullname":"Admin",
+    "access" : "URAR"
+}
+]

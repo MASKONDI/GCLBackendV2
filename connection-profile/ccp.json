@@ -1,0 +1,59 @@
+{
+    "version": "1.0",
+    "organizations": {
+      "user1": {
+        "mspid": "m-QSAWS6VSKNCEJE6DY3D33T7X2Y",
+        "certificateAuthorities": [
+          "ca-GCL-Member"
+        ],
+        "peers": [
+          "peer1.GCL-Member"
+        ]
+      }
+    },
+    "certificateAuthorities": {
+      "ca-GCL-Member": {
+        "url": "https://ca.m-qsaws6vsknceje6dy3d33t7x2y.n-d3kz7ntvebc4xfimky4v3mpntm.managedblockchain.us-east-1.amazonaws.com:30002",
+        "tlsCACerts": {
+          "path": "/home/ubuntu/amb-fabric-config/managedblockchain-tls-chain.pem"
+        },
+        "caName": "m-QSAWS6VSKNCEJE6DY3D33T7X2Y"
+      }
+    },
+    "orderers": {
+      "orderer": {
+        "url": "grpcs://orderer.n-d3kz7ntvebc4xfimky4v3mpntm.managedblockchain.us-east-1.amazonaws.com:30001",
+        "grpcOptions": {
+          "ssl-target-name-override": "orderer.n-d3kz7ntvebc4xfimky4v3mpntm.managedblockchain.us-east-1.amazonaws.com"
+        },
+        "tlsCACerts": {
+          "path": "/home/ubuntu/amb-fabric-config/managedblockchain-tls-chain.pem"
+        }
+      }
+    },
+    "peers": {
+      "peer1.GCL-Member": {
+        "url": "grpcs://nd-j3nnlnadyvclbonjwtvyhxipu4.m-qsaws6vsknceje6dy3d33t7x2y.n-d3kz7ntvebc4xfimky4v3mpntm.managedblockchain.us-east-1.amazonaws.com:30003",
+        "grpcOptions": {
+          "ssl-target-name-override": "nd-j3nnlnadyvclbonjwtvyhxipu4.m-qsaws6vsknceje6dy3d33t7x2y.n-d3kz7ntvebc4xfimky4v3mpntm.managedblockchain.us-east-1.amazonaws.com"
+        },
+        "tlsCACerts": {
+          "path": "/home/ubuntu/amb-fabric-config/managedblockchain-tls-chain.pem"
+      }
+    }
+	},
+    "channels": {
+      "chesst-channel": {
+        "orderers": [
+          "orderer"
+        ],
+        "peers": {
+          "peer1.GCL-Member": {
+            "endorsingPeer": "true",
+            "chaincodeQuery": "true",
+            "ledgerQuery": "true"
+          }
+        }
+      }
+    }
+  }
