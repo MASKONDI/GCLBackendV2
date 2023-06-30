@@ -363,6 +363,7 @@ app.post('/addusers', (req, res) => {
     user_id: req.body.user_id,
     user_name: req.body.user_name,
     email_id: req.body.email_id,
+    contact_number:req.body.contact_number,
     password: req.body.password,
     full_name: req.body.full_name,
     role: req.body.role,

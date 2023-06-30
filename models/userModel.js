@@ -7,6 +7,7 @@ const userSchema = new mongoose.Schema({
   email_id: { type: String, required: true },
   password: { type: String, required: true },
   full_name: { type: String },
+  contact_number: {type: Number},
   role: { type: String },
   access: { type: String },
   created_at: { type: Date, default: Date.now },
