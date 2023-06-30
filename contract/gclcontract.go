@@ -48,28 +48,57 @@ func (cc *ContractChaincode) InitLedger(ctx contractapi.TransactionContextInterf
 	return nil
 }
 
-func (cc *ContractChaincode) addContract(ctx contractapi.TransactionContextInterface, contract *Contract) error {
+func (cc *ContractChaincode) addContract(ctx contractapi.TransactionContextInterface, contractID string, contractDetailsJSON string) error {
+
+	existing, err := ctx.GetStub().GetState(contractID) //check---
+	if err != nil {
+		return fmt.Errorf("failed to read from world state: %w", err)
+	}
+	if existing != nil {
+		return fmt.Errorf("the contract ID already exists")
+		// Parse the contract details JSON
+	contractDetails := &Contract{}
+	err = json.Unmarshal([]byte(contractDetailsJSON), contractDetails)
+	if err != nil {
+		return fmt.Errorf("failed to unmarshal contract details: %w", err)
+	}
+
+	}
 	contractJSON, err := json.Marshal(contract)
 	if err != nil {
 		return fmt.Errorf("failed to marshal contract JSON: %w", err)
 	}
 	fmt.Printf("Contract added Successfully with %s ",contract.ContractID);
-	return ctx.GetStub().PutState(contract.ContractID, contractJSON)
+	err = ctx.GetStub().PutState(contract.ContractID, contractJSON)
+	if err != nil {
+		return fmt.Errorf("failed to put contract details in world state: %w", err)
+	}
+
+	return nil
 }
 
 func (cc *ContractChaincode) approveContract(ctx contractapi.TransactionContextInterface, contractID string, contractStatus string, actionBy string, UpdatedAt string, comment string,is_Active bool, is_contract_fabricated bool) error {
+	
+	contractDetailsBytes, err := ctx.GetStub().GetState(contractID)
+	if err != nil {
+		return fmt.Errorf("failed to read from world state: %w", err)
+	}
+	if contractDetailsBytes == nil {
+		return fmt.Errorf("the contract ID does not exist")
+	}
+
 	contract, err := cc.getContractByContractID(ctx, contractID)
 	if err != nil {
 		return err
 	}
 
 	// Update the contract details
-	contractDetails.ContractStatus = contractStatus
-	contractDetails.ActionBy = actionBy
-	contractDetails.UpdatedAt = UpdatedAt
-	contractDetails.ContractComment = comment
-	contractDetails.IsActive = is_Active
-	contractDetails.IsContractFabricated = is_contract_fabricated
+	contract.ContractStatus = contractStatus
+	contract.ActionBy = actionBy
+	contract.UpdatedAt = UpdatedAt
+	contract.ContractComment = comment
+	contract.IsActive = is_Active
+	contract.IsContractFabricated = is_contract_fabricated
 
 
 	contractJSON, err := json.Marshal(contract)
@@ -118,7 +147,6 @@ func (cc *ContractChaincode) getAllContracts(ctx contractapi.TransactionContextI
 
 	return contracts, responseMetadata.Bookmark, nil
 }
-
 
 func (cc *ContractChaincode) getContractByQuery(ctx contractapi.TransactionContextInterface, queryString string) ([]*Contract, error) {
 	resultsIterator, err := ctx.GetStub().GetQueryResult(queryString)
@@ -200,6 +228,7 @@ func (cc *ContractChaincode) getContractBySeasonID(ctx contractapi.TransactionCo
 	fmt.Printf("Contract fetched Successfully by this %s seasonId",seasonID);
 	return contracts, nil
 }
+
 func main() {
 	cc, err := contractapi.NewChaincode(&ContractChaincode{})
 	if err != nil {
