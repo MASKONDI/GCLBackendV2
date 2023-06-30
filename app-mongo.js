@@ -913,73 +913,77 @@ app.delete('/deletecollections', async (req, res) => {
 });
 
 
-app.get('/searchcontracts', async (req, res) => {
-  const { season, status, created_by, contract_with,from_date,to_date } = req.query;
+app.get("/searchcontracts", async (req, res) => {
+  const { season,contract_status, created_by,  contract_with, startDate, endDate, page, limit } =
+    req.query;
+  const query = {};
+  console.log(req.query);
 
-  // Prepare the search query
-  const searchQuery = {};
+  // Add search criteria to the query object based on the provided parameters
 
   if (season) {
     const seasonobject = await Season.findOne({ season_year: season });
     if (!seasonobject) {
       return res.status(404).json({ error: "Season not found" });
     }
-    searchQuery.season_id = seasonobject._id;  
+    query.season_id = seasonobject._id;
   }
 
-  if (status) {
-    searchQuery.contract_status = new RegExp(status, 'i');
-  }
   if (created_by) {
-    searchQuery.uploaded_by = new RegExp(created_by, 'i');
+    query.uploaded_by = new RegExp(created_by, 'i');;
   }
 
-  if (from_date || to_date) {
-    console.log("*********");
-    //const fromDate = new Date(from_date);
-    //const toDate = new Date(to_date);
-    console.log(from_date,to_date);
-
-    if (!isNaN(from_date) && !isNaN(to_date)) {
-      console.log("&&&&&&&&&&&");
-      searchQuery.created_at = {
-        $gte: from_date,
-        $lte: to_date
-      };
-    }
+  if (contract_status) {
+    query.contract_status = new RegExp(contract_status, 'i'); 
   }
 
   if (contract_with) {
-    console.log("contract_with *******",contract_with);
-    searchQuery.contract_with = new RegExp(contract_with, 'i');
+    query.contract_with = new RegExp(contract_with, 'i');;
   }
 
-  if (Object.keys(searchQuery).length === 0) {
+  if (startDate && endDate) {
+    query.created_at = { $gte: new Date(startDate), $lte: new Date(endDate) };
+  } else if (startDate) {
+    query.created_at = { $gte: new Date(startDate) };
+  } else if (endDate) {
+    query.created_at = { $lte: new Date(endDate) };
+  }
+
+
+  const pageNumber = parseInt(page, 10) || 1;
+  const pageSize = parseInt(limit, 10) || 10;
+
+
+  if (Object.keys(query).length === 0) {
     Contract.find()
-      .then(contracts => {
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize)
+      .then((contracts) => {
         if (!contracts || contracts.length === 0) {
-          return res.status(404).json({ error: 'No contracts found' });
+          return res.status(404).json({ error: "No contracts found" });
         }
 
         res.json(contracts);
       })
-      .catch(error => {
-        console.error('Error fetching contracts:', error);
-        res.status(500).json({ error: 'Error fetching contracts' });
+      .catch((error) => {
+        console.error("Error fetching contracts:", error);
+        res.status(500).json({ error: "Error fetching contracts" });
       });
   } else {
     // Perform the search with the provided criteria
-    Contract.find(searchQuery)
-      .then(contracts => {
+    Contract.find(query)
+      .skip((pageNumber - 1) * pageSize)
+      .limit(pageSize)
+      .then((contracts) => {
         if (!contracts || contracts.length === 0) {
-          return res.status(404).json({ error: 'No contracts found' });
+          return res.status(404).json({ error: "No contracts found" });
         }
 
         res.json(contracts);
       })
-      .catch(error => {
-        console.error('Error searching contracts:', error);
-        res.status(500).json({ error: 'Error searching contracts' });
+      .catch((error) => {
+        console.error("Error searching contracts:", error);
+        res.status(500).json({ error: "Error searching contracts" });
       });
   }
 });

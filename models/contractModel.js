@@ -28,6 +28,7 @@ const contractSchema = new mongoose.Schema({
   deleted_at: { type: Date },
   recordDate: { type: Date },
   is_active: { type: Boolean, default: true },
+  is_contract_fabricated: { type: Boolean, default: false },
 });
 
 const Contract = mongoose.model('Contract', contractSchema);
