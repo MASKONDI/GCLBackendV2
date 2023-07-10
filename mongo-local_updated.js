@@ -7,10 +7,8 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const cron = require("node-cron");
-const gclteams = require("./gclteams.json");
 const pdf = require("pdf-parse");
 var mongoose = require("mongoose");
-const handlebars = require("handlebars");
 
 const User = require("./models/userModel");
 const Team = require("./models/teamModel");
@@ -20,25 +18,29 @@ const Vendor = require("./models/vendorModel");
 const Season = require("./models/seasonModel");
 const Contract = require("./models/contractModel");
 const TeamsPlayer = require("./models/teamsPlayerModel");
-const IndexerEmailService = require("./mailtemplate/createcontract");
-const indexerEmailServiceInstance = new IndexerEmailService();
-const StatusEmailService = require("./mailtemplate/contractstatus");
-const statusEmailServiceInstance = new StatusEmailService();
+const { log } = require("console");
 
-var mongoose = require("mongoose");
-
-const { BlockchainUtils } = require('./blockchainutils/blockchainutils');
+const { BlockchainUtils } = require("./blockchainutils/blockchainutils");
 const blockchainUtils = new BlockchainUtils();
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const uri =
-  "mongodb+srv://maskondi2000:krishna1234@cluster0.6gtuone.mongodb.net/?retryWrites=true&w=majority";
-//const dbName ='ChessT';
-//const uri = "mongodb://127.0.0.1:27017/GCLChessT";
+//const uri = "mongodb+srv://maskondi2000:krishna1234@cluster0.6gtuone.mongodb.net/?retryWrites=true&w=majority";
+const uri = "mongodb://127.0.0.1:27017/GCLChessT";
 const dbName = "GCLChessT";
 const collectionName = "contractrec";
+let collection;
+// MongoClient.connect(uri, { useNewUrlParser: true ,
+//   useUnifiedTopology: true,
+//   serverSelectionTimeoutMS: 30000
+//   })
+// .then(client => {
+//   const db = client.db(dbName);
+//    //collection = db.collection(collectionName);
+//   console.log("connection establish")
+// }).catch(error => console.error(error));
+
 mongoose
   .connect(uri, {
     useNewUrlParser: true,
@@ -46,6 +48,7 @@ mongoose
   .then(() => console.log("DataBase connection successful"))
   .catch((err) => console.log(err));
 
+//run(),
 let contractJson;
 let contractDetails;
 let contractID;
@@ -53,18 +56,25 @@ let contractID;
 /*******************************************************************************/
 /* **************Create Contract Api With Upload Feature*********************/
 /*******************************************************************************/
+//var upload = multer({ dest: 'uploads/' })
 
 // const storage = multer.diskStorage({
-//   destination: "/home/ubuntu/gclproject/gclfrontendv1/public/uploads/",
-//   filename: (req, file, cb) => {
+//   destination: "uploads/",
+//   file: async (req, file, cb) => {
+//     console.log("file",file);
 //     // Generate a unique filename using a hash
 //     if (file.mimetype == "application/pdf") {
+//       console.log("file**********",file.buffer);
+//       let data = await pdf(file.buffer);
 //       const hash = crypto
 //         .createHash("sha256")
-//         .update(file.originalname)
+//         .update(data.text)
 //         .digest("hex");
+
 //       const ext = path.extname(file.originalname);
-//       const filename = `${hash + ".pdf"}`;
+//       console.log("****hash*****",hash);
+
+//       const filename = `${hash}`;
 //       cb(null, filename);
 //     } else {
 //       cb("Error: Only PDF files are allowed");
@@ -72,9 +82,9 @@ let contractID;
 //   },
 // });
 
-// const upload = multer({ storage });
-
+//const upload = multer({ storage });
 var upload = multer();
+//const upload = multer({ storage });
 
 /*******************************************************************************/
 /* **************Create a contract with uploaded file **************************/
@@ -86,11 +96,16 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
   if (req.file.mimetype == "application/pdf") {
     let file_data = await pdf(req.file.buffer);
 
-   
-  // Logic for pdf data matching with input data
-    //file validation
-   // pdfFileValidation(req.body,file_data);
-    
+    /* Logic for pdf data matching with input data
+
+    // const dates = '30 August 2021';
+    // const keywords = [req.body.team_name, 'Confirmation', 'Confirmation'];
+    // const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
+    // const foundDate =  file_data.text.includes(dates);
+    // if(!foundKeywords){
+    //   return res.status(400).json({ error: "Please check PDF and enter Valid Team/Player/Vendor/Sponsors Name" });
+    // }
+    */
     contractFile_hash = await crypto
       .createHash("sha256")
       .update(file_data.text)
@@ -136,7 +151,7 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
         });
       }
     }
-    //const fileext = path.parse(contractFile).name;
+    const fileext = path.parse(contractFile).name;
     const newContract = new Contract({
       contract_id: contractID,
       contract_token: contractFile_hash,
@@ -159,37 +174,14 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       is_active: req.body.is_active,
       recordDate: req.body.recordDate,
     });
-  //   const response = await addContractDetails(contractID, newContract);
-	// console.log("******response**********",response)
-  //   if (response) {
-	// 	console.log("enter in response")
     newContract
       .save()
       .then((savedContract) => {
-        // indexerEmailServiceInstance.sendEmail({
-        //   contract_name: team.team_name,
-        //   contract_type: savedContract.contract_type,
-        //   created_at: savedContract.created_at,
-        //   contract_token: savedContract.contract_token,
-        //   contract_start_date: savedContract.contract_start_date,
-        //   contract_end_date: savedContract.contract_end_date,
-        //   contract_from: team.team_name,
-        //   contract_with: savedContract.contract_with,
-        //   season_name: savedContract.season_name,
-        //   contract_with_emailId: req.body.contract_with_emailId,
-        //   contract_with_contact_number: req.body.contract_with_contact_number,
-        //   contract_from_emailId: req.body.contract_from_emailId,
-        //   contract_from_contact_number: req.body.contract_from_contact_number,
-        // });
-
         res.json(savedContract);
       })
       .catch((error) => {
         res.status(500).json({ error: "Error saving Team" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
   }
 
   // Fetch the player ID based on the player name
@@ -213,7 +205,7 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
         });
       }
     }
-    //const fileext = path.parse(contractFile).name;
+    const fileext = path.parse(contractFile).name;
     const newContract = new Contract({
       contract_id: contractID,
       contract_token: contractFile_hash,
@@ -238,38 +230,14 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       recordDate: req.body.recordDate,
     });
 
-  //   const response = await addContractDetails(contractID, newContract);
-	// console.log("******response*******",response)
-  //   if (response) {
-	// 	console.log("enter in response")
-
     newContract
       .save()
       .then((savedContract) => {
-        // indexerEmailServiceInstance.sendEmail({
-        //   contract_name: player.player_name,
-        //   contract_type: savedContract.contract_type,
-        //   created_at: savedContract.created_at,
-        //   contract_token: savedContract.contract_token,
-        //   contract_start_date: savedContract.contract_start_date,
-        //   contract_end_date: savedContract.contract_end_date,
-        //   contract_from: team.team_name,
-        //   contract_with: player.player_name,
-        //   season_name: savedContract.season_name,
-        //   contract_with_emailId: req.body.contract_with_emailId,
-        //   contract_with_contact_number: req.body.contract_with_contact_number,
-        //   contract_from_emailId: req.body.contract_from_emailId,
-        //   contract_from_contact_number: req.body.contract_from_contact_number,
-        // });
-
         res.json(savedContract);
       })
       .catch((error) => {
         res.status(500).json({ error: "Error saving Player" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
   }
 
   // Fetch the sponsor ID based on the sponsor name
@@ -284,7 +252,6 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
     if (findContract) {
       const findContractSeason = await Contract.findOne({
         season_id: season._id,
-        contract_status: "approved",
       });
       if (findContractSeason) {
         return res.status(409).json({
@@ -292,7 +259,7 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
         });
       }
     }
-    //const fileext = path.parse(contractFile).name;
+    const fileext = path.parse(contractFile).name;
     const newContract = new Contract({
       contract_id: contractID,
       contract_token: contractFile_hash,
@@ -316,37 +283,15 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       is_active: req.body.is_active,
       recordDate: req.body.recordDate,
     });
-    // const response = await addContractDetails(contractID, newContract);
-    // if (response) {
-		// console.log("enter in response")
 
     newContract
       .save()
       .then((savedContract) => {
-        // indexerEmailServiceInstance.sendEmail({
-        //   contract_name: savedContract.sponsor_name,
-        //   contract_type: savedContract.contract_type,
-        //   created_at: savedContract.created_at,
-        //   contract_token: savedContract.contract_token,
-        //   contract_start_date: savedContract.contract_start_date,
-        //   contract_end_date: savedContract.contract_end_date,
-        //   contract_from: savedContract.sponsor_name,
-        //   contract_with: savedContract.contract_with,
-        //   season_name: savedContract.season_name,
-        //   contract_with_emailId: req.body.contract_with_emailId,
-        //   contract_with_contact_number: req.body.contract_with_contact_number,
-        //   contract_from_emailId: req.body.contract_from_emailId,
-        //   contract_from_contact_number: req.body.contract_from_contact_number,
-        // });
-
         res.json(savedContract);
       })
       .catch((error) => {
         res.status(500).json({ error: "Error saving Sponsor" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
   }
 
   // Fetch the vendor ID based on the vendor name
@@ -366,7 +311,7 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
         });
       }
     }
-    //const fileext = path.parse(contractFile).name;
+    const fileext = path.parse(contractFile).name;
     const newContract = new Contract({
       contract_id: contractID,
       contract_token: contractFile_hash,
@@ -391,38 +336,15 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       recordDate: req.body.recordDate,
     });
 
-    // const response = await addContractDetails(contractID, newContract);
-    // if (response) {
-		// console.log("enter in response")
-
     newContract
       .save()
       .then((savedContract) => {
-        // indexerEmailServiceInstance.sendEmail({
-        //   contract_name: savedContract.vendor_name,
-        //   contract_type: savedContract.contract_type,
-        //   created_at: savedContract.created_at,
-        //   contract_token: savedContract.contract_token,
-        //   contract_start_date: savedContract.contract_start_date,
-        //   contract_end_date: savedContract.contract_end_date,
-        //   contract_from: savedContract.vendor_name,
-        //   contract_with: savedContract.contract_with,
-        //   season_name: savedContract.season_name,
-        //   contract_with_emailId: req.body.contract_with_emailId,
-        //   contract_with_contact_number: req.body.contract_with_contact_number,
-        //   contract_from_emailId: req.body.contract_from_emailId,
-        //   contract_from_contact_number: req.body.contract_from_contact_number,
-        // });
-
         res.json(savedContract);
       })
       .catch((error) => {
         res.status(500).json({ error: "Error saving Vendor" });
       });
-//  } else {
-//       res.status(500).json({ error: "Something went wrong" });
-//     }
-   }
+  }
 });
 
 /*******************************************************************************/
@@ -722,37 +644,27 @@ app.get("/contractList", (req, res) => {
 /* **************Update Contract Status, actionBy, actionDate, comment**********************************/
 /*******************************************************************************/
 
-// app.post("/updateContractStatus", async (req, res) => {
-//   let current = new Date();
-//   const actionDate = current.toISOString().slice(0, 10);
+// app.post("/updateContractStatus", (req, res) => {
 
-//   collection
-//     .updateOne(
-//       { contractID: req.body.contractId },
-//       {
-//         $set: {
-//           status: req.body.status,
-//           actionBy: req.body.actionBy,
-//           actionDate: actionDate,
-//           comment: req.body.comment,
-//         },
-//       }
-//     )
-//     .then((result) => {
-//       if (result.modifiedCount > 0) {
-//         res
-//           .status(200)
-//           .json({ message: "Contract Status updated successfully" });
-//       } else {
-//         res.status(404).send("contract not found");
-//       }
-//     })
-//     .catch((error) => {
-//       console.error("Error updating record:", error);
-//       res.status(500).send("Internal Server Error");
-//     });
+//   let current = new Date();
+//   const actionDate = current.toISOString().slice(0,10);
+
+//   collection.updateOne(
+//     { "contractID": req.body.contractId },
+//       { $set: { "status":  req.body.status,"actionBy": req.body.actionBy,'actionDate':actionDate,'comment':req.body.comment } })
+//   .then((result) => {
+//     if (result.modifiedCount > 0) {
+//       res.status(200).json({ message: "Contract Status updated successfully"  });
+//     } else {
+//       res.status(404).send('contract not found');
+//     }
+//   })
+//   .catch((error) => {
+//     console.error('Error updating record:', error);
+//     res.status(500).send('Internal Server Error');
+//   });
 //   const contractDetails = req.body;
-//   console.log("*********req.body", contractDetails);
+//   console.log("*********req.body",contractDetails);
 //   //approveStatus(actionDate,contractDetails);
 
 //   res.json({
@@ -931,10 +843,12 @@ app.post("/addTeamPlayerList", (req, res) => {
   teamsplayer
     .save()
     .then((teamPlayerList) => {
-      res.status(201).json({
-        message: "teams-player created successfully",
-        teamPlayerList: teamPlayerList,
-      });
+      res
+        .status(201)
+        .json({
+          message: "teams-player created successfully",
+          teamPlayerList: teamPlayerList,
+        });
     })
     .catch((error) => {
       res.status(500).json({ error: error.message });
@@ -954,11 +868,13 @@ app.get("/getTeamplayersByTeamIdSeasonId/:teamId/:seasonId", (req, res) => {
       Team.find({ _id: teamId }).then((team) => {
         Player.find({ _id: { $in: players[0].player_id } })
           .then((players) => {
-            res.status(200).json({
-              message: "team and Player details",
-              players: players,
-              Team: team,
-            });
+            res
+              .status(200)
+              .json({
+                message: "team and Player details",
+                players: players,
+                Team: team,
+              });
           })
           .catch((error) => {
             console.error("Error fetching players:", error);
@@ -1009,11 +925,13 @@ app.get("/getSeasonById/:seasonId", (req, res) => {
           //res.json(user);
           Team.find({})
             .then((teams) => {
-              res.status(200).json({
-                message: "team and admin details",
-                user: user,
-                Team: teams,
-              });
+              res
+                .status(200)
+                .json({
+                  message: "team and admin details",
+                  user: user,
+                  Team: teams,
+                });
               //res.json(teams);
             })
             .catch((error) => {
@@ -1033,7 +951,40 @@ app.get("/getSeasonById/:seasonId", (req, res) => {
       res.status(500).json({ error: "Error fetching season" });
     });
 });
+// app.get('/getSeasonById/:seasonId', (req, res) => {
+//   const { seasonId } = req.params;
+// console.log("seasonId",seasonId);
+//   Season.findOne({ _id: seasonId })
+//     .then((season) => {
+//       if (season) {
 
+//         Season.findById(seasonId)
+//         .then(season => {
+
+//           // Retrieve all teams associated with the season
+//           Team.find({})
+//             .then(teams => {
+//               res.json(teams);
+//             })
+//             .catch(error => {
+//               console.error('Error fetching teams:', error);
+//               res.status(500).json({ error: 'Error fetching teams' });
+//             });
+//         })
+//         .catch(error => {
+//           console.error('Error fetching season:', error);
+//           res.status(500).json({ error: 'Error fetching season' });
+//         });
+
+//         res.status(200).json(season);
+//       } else {
+//         res.status(404).json({ message: 'Season not found' });
+//       }
+//     })
+//     .catch((error) => {
+//       res.status(500).json({ error: error.message });
+//     });
+// });
 
 app.get("/getSeasonsList", async (req, res) => {
   Season.find({}, { season_name: 1, season_year: 1 })
@@ -1089,7 +1040,6 @@ app.get("/searchcontracts", async (req, res) => {
     page,
     limit,
     sortOrder,
-    sortBy,
   } = req.query;
   const query = {};
   //console.log(req.query);
@@ -1126,10 +1076,10 @@ app.get("/searchcontracts", async (req, res) => {
 
   const sortOptions = {};
 
-  if (sortBy) {
-    sortOptions[sortBy] = sortOrder === "asc" ? 1 : -1;
-  } else {
-    sortOptions.created_at = sortOrder === "asc" ? 1 : -1;
+  if (sortOrder === "asc") {
+    sortOptions.created_at = 1;
+  } else if (sortOrder === "desc") {
+    sortOptions.created_at = -1;
   }
 
   const pageNumber = parseInt(page, 10) || 1;
@@ -1190,7 +1140,7 @@ app.get("/searchcontracts", async (req, res) => {
   }
 });
 
-app.put("/updateContracts/:contract_id", async (req, res) => {
+app.put("/updateContracts/:contract_id", (req, res) => {
   const contract_id = req.params.contract_id;
 
   const {
@@ -1218,141 +1168,12 @@ app.put("/updateContracts/:contract_id", async (req, res) => {
   }
 
   // Update the contract document
-  const findContract = await Contract.findOne({ contract_id: contract_id });
-  console.log("SSSSSSSSSSSSSSS", findContract);
 
-  // const response = await approveContract(
-  //   contract_id,
-  //   update.contract_status,
-	//   update.action_by,
-	//   update.updated_at,
-	//   update.contract_comment,
-  //   findContract.is_active,
-  //   findContract.is_contract_fabricated
-  // );
-  // console.log("response********",response);
-  // if (response) {
-	//   console.log("inside response********");
-  Contract.findByIdAndUpdate(findContract._id, update, { new: true })
+  Contract.findByIdAndUpdate(contract_id, update, { new: true })
     .then((updatedContract) => {
       if (!updatedContract) {
-          return res.status(404).json({ error: "No Contract found" });
+        return res.status(404).json({ error: "No Contract found" });
       }
-      // var contract_name;
-      // const teamId = findContract.team_id;
-      // console.log("teamIdteamIdteamIdteamIdteamId",teamId)
-      // if (teamId){
-      //   console.log("teamIdteamIdteamIdteamIdteamIdteamIdteamIdteamId")
-      //   Vendor.findById(teamId)
-      //   .then(team => {
-      //     if (!team) {
-      //       return res.status(404).json({ error: 'Team not found' });
-      //     }
-      //     contract_name = team.team_name
-      //     statusEmailServiceInstance.sendEmail({
-      //       contract_name: contract_name,
-      //       contract_type: updatedContract.contract_type,
-      //       contract_status: updatedContract.contract_status,
-      //       contract_token: updatedContract.contract_token,
-      //       action_by: updatedContract.action_by,
-      //       updated_at: updatedContract.updated_at,
-      //       season_name: updatedContract.season_name,
-      //       comment: updatedContract.contract_comment,
-      //       contract_with_emailId: updatedContract.contract_with_emailId,
-      //       contract_with_contact_number:
-      //         updatedContract.contract_with_contact_number,
-      //       contract_from_emailId: updatedContract.contract_from_emailId,
-      //       contract_from_contact_number:
-      //         updatedContract.contract_from_contact_number,
-      //     });
-      //   })
-      // } 
-
-      // const playerId = findContract.player_id;
-      // console.log("playerIdplayerIdplayerIdplayerIdplayerId",playerId)
-      // if (playerId){
-      //   console.log("playerIdplayerIdplayerIdplayerIdplayerId")
-      //   Vendor.findById(playerId)
-      //   .then(player => {
-      //     if (!player) {
-      //       return res.status(404).json({ error: 'Player not found' });
-      //     }
-      //     contract_name = player.player_name
-      //     statusEmailServiceInstance.sendEmail({
-      //       contract_name: contract_name,
-      //       contract_type: updatedContract.contract_type,
-      //       contract_status: updatedContract.contract_status,
-      //       contract_token: updatedContract.contract_token,
-      //       action_by: updatedContract.action_by,
-      //       updated_at: updatedContract.updated_at,
-      //       season_name: updatedContract.season_name,
-      //       comment: updatedContract.contract_comment,
-      //       contract_with_emailId: updatedContract.contract_with_emailId,
-      //       contract_with_contact_number:
-      //         updatedContract.contract_with_contact_number,
-      //       contract_from_emailId: updatedContract.contract_from_emailId,
-      //       contract_from_contact_number:
-      //         updatedContract.contract_from_contact_number,
-      //     });
-      //   })
-      // } 
-
-      // const sponsorId = findContract.sponsor_id;
-      // console.log("sponsorIdsponsorIdsponsorIdsponsorIdsponsorId",sponsorId)
-      // if (sponsorId){
-      //   console.log("sponsorIdsponsorIdsponsorIdsponsorIdsponsorIdsponsorIdsponsorIdsponsorId")
-      //   Sponsor.findById(sponsorId)
-      //   .then(sponsor => {
-      //     if (!sponsor) {
-      //       return res.status(404).json({ error: 'sponsorId not found' });
-      //     }
-      //     contract_name = sponsor.sponsor_name
-      //     statusEmailServiceInstance.sendEmail({
-      //       contract_name: contract_name,
-      //       contract_type: updatedContract.contract_type,
-      //       contract_status: updatedContract.contract_status,
-      //       contract_token: updatedContract.contract_token,
-      //       action_by: updatedContract.action_by,
-      //       updated_at: updatedContract.updated_at,
-      //       season_name: updatedContract.season_name,
-      //       comment: updatedContract.contract_comment,
-      //       contract_with_emailId: updatedContract.contract_with_emailId,
-      //       contract_with_contact_number:
-      //         updatedContract.contract_with_contact_number,
-      //       contract_from_emailId: updatedContract.contract_from_emailId,
-      //       contract_from_contact_number:
-      //         updatedContract.contract_from_contact_number,
-      //     });
-      //   })
-      // } 
-      // const vendorId = findContract.vendor_id;
-      // console.log("vendorIdvendorIdvendorIdvendorIdvendorId",vendorId)
-      // if (vendorId){
-      //   console.log("vendorIdvendorIdvendorIdvendorIdvendorId")
-      //   Vendor.findById(vendorId)
-      //   .then(vendor => {
-      //     if (!vendor) {
-      //       return res.status(404).json({ error: 'Vendor not found' });
-      //     }
-      //     contract_name = vendor.vendor_name
-      //     statusEmailServiceInstance.sendEmail({
-      //       contract_name: contract_name,
-      //       contract_type: updatedContract.contract_type,
-      //       contract_status: updatedContract.contract_status,
-      //       contract_token: updatedContract.contract_token,
-      //       action_by: updatedContract.action_by,
-      //       updated_at: updatedContract.updated_at,
-      //       season_name: updatedContract.season_name,
-      //       comment: updatedContract.contract_comment,
-      //       contract_with_emailId: updatedContract.contract_with_emailId,
-      //       contract_with_contact_number:
-      //         updatedContract.contract_with_contact_number,
-      //       contract_from_emailId: updatedContract.contract_from_emailId,
-      //       contract_from_contact_number:
-      //         updatedContract.contract_from_contact_number,
-      //     });
-      //   })
-      // }    
 
       res.json(updatedContract);
     })
@@ -1360,164 +1181,7 @@ app.put("/updateContracts/:contract_id", async (req, res) => {
       console.error("Error updating contract:", error);
       res.status(500).json({ error: "Error updating contract" });
     });
-  //}
 });
-
-
-// async function addContractDetails(contractID, contractDetails) {
-//   console.log("$$$$$$$$$$",contractDetails);
-//   try {
-//     const contractJson = JSON.stringify(contractDetails);
-//     console.log("************", contractJson);
-//     console.log(contractID);
-//     const contract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const bufferResponse = await contract.submitTransaction(
-//       "AddContract",
-//       contractID.toString("utf-8"),
-//       contractJson
-//     );
-//     console.log("bufferResponse*****************", JSON.stringify(bufferResponse));
-//     return true;
-//   } catch (error) {
-//     console.log("error", error);
-//     return false;
-//   }
-// }
-
-// async function approveContract(
-//   contract_id,
-//   contract_status,
-//   action_by,
-//   updated_at,
-//   contract_comment,
-//   is_active,
-//   is_contract_fabricated
-// ) {
-//   console.log("contractStatus,contractId,actionBy,comment", contract_id,contract_status,action_by,updated_at,contract_comment,is_active,is_contract_fabricated);
-//     try {
-//       const contract = await blockchainUtils.createInstance(
-//         "User3",
-//         "gclcontractCC"
-//       );
-//       const bufferResponse = await contract.submitTransaction(
-//         "ApproveContract",
-//         contract_id.toString("utf-8"),
-//         contract_status.toString("utf-8"),
-//         action_by.toString("utf-8"),
-//         updated_at.toString("utf-8"),
-//         contract_comment.toString("utf-8"),
-//         true,
-//         false
-//       );
-// 	  console.log("bufferresponse***********", bufferResponse)
-//       return true;
-//     } catch (error) {
-//       console.log("error", error);
-//     }
-// }
-
-// app.get("/getAllContract", async (req, res) => {
-// console.log("**********fecting from blockchain");
-//   try {
-//     //const gclContract = await blockchainUtils.createInstance(
-//     //  "User3",
-//     //  "gclcontractCC"
-//     //);
-//     //const gclhlfResponse = await gclContract.evaluateTransaction(
-//     //  "getAllContracts",
-//     //  1,
-//     //  10
-//     //);
-//      const gclcontract = await blockchainUtils.createInstance('User3','gclcontractCC');
-//      //console.log("*********",gclcontract);
-//    const gclHlfResponse = await gclcontract.evaluateTransaction('GetAllContract');
-//    //console.log("bufferResponse", teamHlfResponse);
-//    var gclData = JSON.parse(gclHlfResponse);
-//     console.log("****buffer response*********",gclData);
-    
-//     //console.log("****buffer response*********",JSON.parse(gclData));
-//     res.json(gclData);
-//   } catch {
-//     res.status(500).json({ error: "Error fetching Contracts" });
-//   }
-// });
-
-// app.get("/getContractByQuery", async (req, res) => {
-// console.log("calling api with query",req.body.query);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractByQuery",
-//       req.body.query.toString("utf-8")
-//     );
-//     console.log(JSON.parse(gclhlfResponse));
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching Contract" });
-//   }
-// });
-
-// app.get("/getContractByContractID", async (req, res) => {
-//   console.log("contract Details ",req.body.contract_id);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractByContractID",
-//       req.body.contract_id.toString("utf-8")
-//     );
-//     console.log(JSON.parse(gclhlfResponse));
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching season" });
-//   }
-// });
-
-// app.get("/getContractBySeasonID", async (req, res) => {
-//   console.log("contract Details ",req.body);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractBySeasonID",
-//       req.body.season_id.toString("utf-8")
-//     );
-//     console.log(gclhlfResponse);
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching season" });
-//   }
-// });
-
-
-// app.get("/deleteByContractID", async (req, res) => {
-
-// console.log("deleteByContractID ",req.body.contract_id);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "DeleteByContractID",
-//       req.body.contract_id.toString("utf-8")
-//     );
-//     console.log("**************",JSON.parse(gclhlfResponse));
-//     //res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Something went wrong with deletion" });
-//   }
-// });
 
 // app.delete('/deleteAllContractDetails', (req, res) => {
 //   // Delete all records in the collection
@@ -1627,49 +1291,6 @@ function add_hours(date, hours) {
   console.log("final date--->", date);
   return date;
 }
-
-
-function pdfFileValidation(contractDetails,file_data){
-  console.log("Contract Details is : ", contractDetails);
-  if(contractDetails.contract_type=="Team"){
-    // const dates = '30 August 2021';
-     const keywords = [contractDetails.team_name];
-     const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
-     console.log("Keywords Found",keywords,foundKeywords);
-    // const foundDate =  file_data.text.includes(dates);
-     if(!foundKeywords){
-       return res.status(400).json({ error: "Please check PDF and enter Valid Input params" });
-     }
-    } else if(contractDetails.contract_type=="Player"){// const dates = '30 August 2021';
-       const keywords = [contractDetails.team_name, contractDetails.player_name];
-       const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
-      // const foundDate =  file_data.text.includes(dates);
-       if(!foundKeywords){
-         return res.status(400).json({ error: "Please check PDF and enter Valid Input params" });
-       }
-    }
-    else if(contractDetails.contract_type=="Sponsor"){
-      // const dates = '30 August 2021';
-     const keywords = [contractDetails.sponsor_name];
-     const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
-     console.log("Keywords Found",foundKeywords);
-    // const foundDate =  file_data.text.includes(dates);
-     if(!foundKeywords){
-       return res.status(400).json({ error: "Please check PDF and enter Valid Input params" });
-     }
-    }
-    else if(contractDetails.contract_type=="Vendor"){
-      // const dates = '30 August 2021';
-     const keywords = [contractDetails.vendor_name];
-     const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
-     console.log("Keywords Found",foundKeywords);
-    // const foundDate =  file_data.text.includes(dates);
-     if(!foundKeywords){
-       return res.status(400).json({ error: "Please check PDF and enter Valid Input params" });
-     }
-    }
-}
-
 
 // Start the server
 app.listen(8080, () => {

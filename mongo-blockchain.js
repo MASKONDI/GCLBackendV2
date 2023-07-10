@@ -33,10 +33,10 @@ const blockchainUtils = new BlockchainUtils();
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-const uri =
-  "mongodb+srv://maskondi2000:krishna1234@cluster0.6gtuone.mongodb.net/?retryWrites=true&w=majority";
+//const uri =
+//  "mongodb+srv://maskondi2000:krishna1234@cluster0.6gtuone.mongodb.net/?retryWrites=true&w=majority";
 //const dbName ='ChessT';
-//const uri = "mongodb://127.0.0.1:27017/GCLChessT";
+const uri = "mongodb://127.0.0.1:27017/GCLChessT";
 const dbName = "GCLChessT";
 const collectionName = "contractrec";
 mongoose
@@ -86,11 +86,11 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
   if (req.file.mimetype == "application/pdf") {
     let file_data = await pdf(req.file.buffer);
 
-   
-  // Logic for pdf data matching with input data
+    /* Logic for pdf data matching with input data
     //file validation
    // pdfFileValidation(req.body,file_data);
     
+    */
     contractFile_hash = await crypto
       .createHash("sha256")
       .update(file_data.text)
@@ -159,10 +159,10 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       is_active: req.body.is_active,
       recordDate: req.body.recordDate,
     });
-  //   const response = await addContractDetails(contractID, newContract);
-	// console.log("******response**********",response)
-  //   if (response) {
-	// 	console.log("enter in response")
+    const response = await addContractDetails(contractID, newContract);
+	console.log("******response**********",response)
+    if (response) {
+		console.log("enter in response")
     newContract
       .save()
       .then((savedContract) => {
@@ -187,9 +187,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       .catch((error) => {
         res.status(500).json({ error: "Error saving Team" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
+    } else {
+      res.status(500).json({ error: "Something went wrong" });
+    }
   }
 
   // Fetch the player ID based on the player name
@@ -238,10 +238,10 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       recordDate: req.body.recordDate,
     });
 
-  //   const response = await addContractDetails(contractID, newContract);
-	// console.log("******response*******",response)
-  //   if (response) {
-	// 	console.log("enter in response")
+    const response = await addContractDetails(contractID, newContract);
+	console.log("******response*******",response)
+    if (response) {
+		console.log("enter in response")
 
     newContract
       .save()
@@ -267,9 +267,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       .catch((error) => {
         res.status(500).json({ error: "Error saving Player" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
+    } else {
+      res.status(500).json({ error: "Something went wrong" });
+    }
   }
 
   // Fetch the sponsor ID based on the sponsor name
@@ -316,9 +316,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       is_active: req.body.is_active,
       recordDate: req.body.recordDate,
     });
-    // const response = await addContractDetails(contractID, newContract);
-    // if (response) {
-		// console.log("enter in response")
+    const response = await addContractDetails(contractID, newContract);
+    if (response) {
+		console.log("enter in response")
 
     newContract
       .save()
@@ -344,9 +344,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       .catch((error) => {
         res.status(500).json({ error: "Error saving Sponsor" });
       });
-    // } else {
-    //   res.status(500).json({ error: "Something went wrong" });
-    // }
+    } else {
+      res.status(500).json({ error: "Something went wrong" });
+    }
   }
 
   // Fetch the vendor ID based on the vendor name
@@ -391,9 +391,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       recordDate: req.body.recordDate,
     });
 
-    // const response = await addContractDetails(contractID, newContract);
-    // if (response) {
-		// console.log("enter in response")
+    const response = await addContractDetails(contractID, newContract);
+    if (response) {
+		console.log("enter in response")
 
     newContract
       .save()
@@ -419,9 +419,9 @@ app.post("/createContracts", upload.single("file"), async (req, res) => {
       .catch((error) => {
         res.status(500).json({ error: "Error saving Vendor" });
       });
-//  } else {
-//       res.status(500).json({ error: "Something went wrong" });
-//     }
+ } else {
+      res.status(500).json({ error: "Something went wrong" });
+    }
    }
 });
 
@@ -1033,7 +1033,40 @@ app.get("/getSeasonById/:seasonId", (req, res) => {
       res.status(500).json({ error: "Error fetching season" });
     });
 });
+// app.get('/getSeasonById/:seasonId', (req, res) => {
+//   const { seasonId } = req.params;
+// console.log("seasonId",seasonId);
+//   Season.findOne({ _id: seasonId })
+//     .then((season) => {
+//       if (season) {
 
+//         Season.findById(seasonId)
+//         .then(season => {
+
+//           // Retrieve all teams associated with the season
+//           Team.find({})
+//             .then(teams => {
+//               res.json(teams);
+//             })
+//             .catch(error => {
+//               console.error('Error fetching teams:', error);
+//               res.status(500).json({ error: 'Error fetching teams' });
+//             });
+//         })
+//         .catch(error => {
+//           console.error('Error fetching season:', error);
+//           res.status(500).json({ error: 'Error fetching season' });
+//         });
+
+//         res.status(200).json(season);
+//       } else {
+//         res.status(404).json({ message: 'Season not found' });
+//       }
+//     })
+//     .catch((error) => {
+//       res.status(500).json({ error: error.message });
+//     });
+// });
 
 app.get("/getSeasonsList", async (req, res) => {
   Season.find({}, { season_name: 1, season_year: 1 })
@@ -1221,18 +1254,18 @@ app.put("/updateContracts/:contract_id", async (req, res) => {
   const findContract = await Contract.findOne({ contract_id: contract_id });
   console.log("SSSSSSSSSSSSSSS", findContract);
 
-  // const response = await approveContract(
-  //   contract_id,
-  //   update.contract_status,
-	//   update.action_by,
-	//   update.updated_at,
-	//   update.contract_comment,
-  //   findContract.is_active,
-  //   findContract.is_contract_fabricated
-  // );
-  // console.log("response********",response);
-  // if (response) {
-	//   console.log("inside response********");
+  const response = await approveContract(
+    contract_id,
+    update.contract_status,
+	  update.action_by,
+	  update.updated_at,
+	  update.contract_comment,
+    findContract.is_active,
+    findContract.is_contract_fabricated
+  );
+  console.log("response********",response);
+  if (response) {
+	  console.log("inside response********");
   Contract.findByIdAndUpdate(findContract._id, update, { new: true })
     .then((updatedContract) => {
       if (!updatedContract) {
@@ -1360,164 +1393,164 @@ app.put("/updateContracts/:contract_id", async (req, res) => {
       console.error("Error updating contract:", error);
       res.status(500).json({ error: "Error updating contract" });
     });
-  //}
+  }
 });
 
 
-// async function addContractDetails(contractID, contractDetails) {
-//   console.log("$$$$$$$$$$",contractDetails);
-//   try {
-//     const contractJson = JSON.stringify(contractDetails);
-//     console.log("************", contractJson);
-//     console.log(contractID);
-//     const contract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const bufferResponse = await contract.submitTransaction(
-//       "AddContract",
-//       contractID.toString("utf-8"),
-//       contractJson
-//     );
-//     console.log("bufferResponse*****************", JSON.stringify(bufferResponse));
-//     return true;
-//   } catch (error) {
-//     console.log("error", error);
-//     return false;
-//   }
-// }
+async function addContractDetails(contractID, contractDetails) {
+  console.log("$$$$$$$$$$",contractDetails);
+  try {
+    const contractJson = JSON.stringify(contractDetails);
+    console.log("************", contractJson);
+    console.log(contractID);
+    const contract = await blockchainUtils.createInstance(
+      "User3",
+      "gclcontractCC"
+    );
+    const bufferResponse = await contract.submitTransaction(
+      "AddContract",
+      contractID.toString("utf-8"),
+      contractJson
+    );
+    console.log("bufferResponse*****************", JSON.stringify(bufferResponse));
+    return true;
+  } catch (error) {
+    console.log("error", error);
+    return false;
+  }
+}
 
-// async function approveContract(
-//   contract_id,
-//   contract_status,
-//   action_by,
-//   updated_at,
-//   contract_comment,
-//   is_active,
-//   is_contract_fabricated
-// ) {
-//   console.log("contractStatus,contractId,actionBy,comment", contract_id,contract_status,action_by,updated_at,contract_comment,is_active,is_contract_fabricated);
-//     try {
-//       const contract = await blockchainUtils.createInstance(
-//         "User3",
-//         "gclcontractCC"
-//       );
-//       const bufferResponse = await contract.submitTransaction(
-//         "ApproveContract",
-//         contract_id.toString("utf-8"),
-//         contract_status.toString("utf-8"),
-//         action_by.toString("utf-8"),
-//         updated_at.toString("utf-8"),
-//         contract_comment.toString("utf-8"),
-//         true,
-//         false
-//       );
-// 	  console.log("bufferresponse***********", bufferResponse)
-//       return true;
-//     } catch (error) {
-//       console.log("error", error);
-//     }
-// }
+async function approveContract(
+  contract_id,
+  contract_status,
+  action_by,
+  updated_at,
+  contract_comment,
+  is_active,
+  is_contract_fabricated
+) {
+  console.log("contractStatus,contractId,actionBy,comment", contract_id,contract_status,action_by,updated_at,contract_comment,is_active,is_contract_fabricated);
+    try {
+      const contract = await blockchainUtils.createInstance(
+        "User3",
+        "gclcontractCC"
+      );
+      const bufferResponse = await contract.submitTransaction(
+        "ApproveContract",
+        contract_id.toString("utf-8"),
+        contract_status.toString("utf-8"),
+        action_by.toString("utf-8"),
+        updated_at.toString("utf-8"),
+        contract_comment.toString("utf-8"),
+        true,
+        false
+      );
+	  console.log("bufferresponse***********", bufferResponse)
+      return true;
+    } catch (error) {
+      console.log("error", error);
+    }
+}
 
-// app.get("/getAllContract", async (req, res) => {
-// console.log("**********fecting from blockchain");
-//   try {
-//     //const gclContract = await blockchainUtils.createInstance(
-//     //  "User3",
-//     //  "gclcontractCC"
-//     //);
-//     //const gclhlfResponse = await gclContract.evaluateTransaction(
-//     //  "getAllContracts",
-//     //  1,
-//     //  10
-//     //);
-//      const gclcontract = await blockchainUtils.createInstance('User3','gclcontractCC');
-//      //console.log("*********",gclcontract);
-//    const gclHlfResponse = await gclcontract.evaluateTransaction('GetAllContract');
-//    //console.log("bufferResponse", teamHlfResponse);
-//    var gclData = JSON.parse(gclHlfResponse);
-//     console.log("****buffer response*********",gclData);
+app.get("/getAllContract", async (req, res) => {
+console.log("**********fecting from blockchain");
+  try {
+    //const gclContract = await blockchainUtils.createInstance(
+    //  "User3",
+    //  "gclcontractCC"
+    //);
+    //const gclhlfResponse = await gclContract.evaluateTransaction(
+    //  "getAllContracts",
+    //  1,
+    //  10
+    //);
+     const gclcontract = await blockchainUtils.createInstance('User3','gclcontractCC');
+     //console.log("*********",gclcontract);
+   const gclHlfResponse = await gclcontract.evaluateTransaction('GetAllContract');
+   //console.log("bufferResponse", teamHlfResponse);
+   var gclData = JSON.parse(gclHlfResponse);
+    console.log("****buffer response*********",gclData);
     
-//     //console.log("****buffer response*********",JSON.parse(gclData));
-//     res.json(gclData);
-//   } catch {
-//     res.status(500).json({ error: "Error fetching Contracts" });
-//   }
-// });
+    //console.log("****buffer response*********",JSON.parse(gclData));
+    res.json(gclData);
+  } catch {
+    res.status(500).json({ error: "Error fetching Contracts" });
+  }
+});
 
-// app.get("/getContractByQuery", async (req, res) => {
-// console.log("calling api with query",req.body.query);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractByQuery",
-//       req.body.query.toString("utf-8")
-//     );
-//     console.log(JSON.parse(gclhlfResponse));
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching Contract" });
-//   }
-// });
+app.get("/getContractByQuery", async (req, res) => {
+console.log("calling api with query",req.body.query);
+  try {
+    const gclContract = await blockchainUtils.createInstance(
+      "User3",
+      "gclcontractCC"
+    );
+    const gclhlfResponse = await gclContract.evaluateTransaction(
+      "GetContractByQuery",
+      req.body.query.toString("utf-8")
+    );
+    console.log(JSON.parse(gclhlfResponse));
+    res.json(JSON.parse(gclhlfResponse));
+  } catch {
+    res.status(500).json({ error: "Error fetching Contract" });
+  }
+});
 
-// app.get("/getContractByContractID", async (req, res) => {
-//   console.log("contract Details ",req.body.contract_id);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractByContractID",
-//       req.body.contract_id.toString("utf-8")
-//     );
-//     console.log(JSON.parse(gclhlfResponse));
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching season" });
-//   }
-// });
+app.get("/getContractByContractID", async (req, res) => {
+  console.log("contract Details ",req.body.contract_id);
+  try {
+    const gclContract = await blockchainUtils.createInstance(
+      "User3",
+      "gclcontractCC"
+    );
+    const gclhlfResponse = await gclContract.evaluateTransaction(
+      "GetContractByContractID",
+      req.body.contract_id.toString("utf-8")
+    );
+    console.log(JSON.parse(gclhlfResponse));
+    res.json(JSON.parse(gclhlfResponse));
+  } catch {
+    res.status(500).json({ error: "Error fetching season" });
+  }
+});
 
-// app.get("/getContractBySeasonID", async (req, res) => {
-//   console.log("contract Details ",req.body);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "GetContractBySeasonID",
-//       req.body.season_id.toString("utf-8")
-//     );
-//     console.log(gclhlfResponse);
-//     res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Error fetching season" });
-//   }
-// });
+app.get("/getContractBySeasonID", async (req, res) => {
+  console.log("contract Details ",req.body);
+  try {
+    const gclContract = await blockchainUtils.createInstance(
+      "User3",
+      "gclcontractCC"
+    );
+    const gclhlfResponse = await gclContract.evaluateTransaction(
+      "GetContractBySeasonID",
+      req.body.season_id.toString("utf-8")
+    );
+    console.log(gclhlfResponse);
+    res.json(JSON.parse(gclhlfResponse));
+  } catch {
+    res.status(500).json({ error: "Error fetching season" });
+  }
+});
 
 
-// app.get("/deleteByContractID", async (req, res) => {
+app.get("/deleteByContractID", async (req, res) => {
 
-// console.log("deleteByContractID ",req.body.contract_id);
-//   try {
-//     const gclContract = await blockchainUtils.createInstance(
-//       "User3",
-//       "gclcontractCC"
-//     );
-//     const gclhlfResponse = await gclContract.evaluateTransaction(
-//       "DeleteByContractID",
-//       req.body.contract_id.toString("utf-8")
-//     );
-//     console.log("**************",JSON.parse(gclhlfResponse));
-//     //res.json(JSON.parse(gclhlfResponse));
-//   } catch {
-//     res.status(500).json({ error: "Something went wrong with deletion" });
-//   }
-// });
+console.log("deleteByContractID ",req.body.contract_id);
+  try {
+    const gclContract = await blockchainUtils.createInstance(
+      "User3",
+      "gclcontractCC"
+    );
+    const gclhlfResponse = await gclContract.evaluateTransaction(
+      "DeleteByContractID",
+      req.body.contract_id.toString("utf-8")
+    );
+    console.log("**************",JSON.parse(gclhlfResponse));
+    //res.json(JSON.parse(gclhlfResponse));
+  } catch {
+    res.status(500).json({ error: "Something went wrong with deletion" });
+  }
+});
 
 // app.delete('/deleteAllContractDetails', (req, res) => {
 //   // Delete all records in the collection
@@ -1641,7 +1674,7 @@ function pdfFileValidation(contractDetails,file_data){
        return res.status(400).json({ error: "Please check PDF and enter Valid Input params" });
      }
     } else if(contractDetails.contract_type=="Player"){// const dates = '30 August 2021';
-       const keywords = [contractDetails.team_name, contractDetails.player_name];
+       const keywords = [contractDetails.team_name,contractDetails.player_name];
        const foundKeywords = keywords.filter(keyword => file_data.text.includes(keyword));
       // const foundDate =  file_data.text.includes(dates);
        if(!foundKeywords){
@@ -1669,7 +1702,6 @@ function pdfFileValidation(contractDetails,file_data){
      }
     }
 }
-
 
 // Start the server
 app.listen(8080, () => {

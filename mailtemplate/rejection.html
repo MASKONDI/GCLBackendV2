@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #f7f7f7;
+			padding: 20px;
+		}
+
+		.container {
+			max-width: 600px;
+			margin: 0 auto;
+			background-color: #ffffff;
+			padding: 40px;
+			border-radius: 4px;
+			box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+		}
+
+		h1 {
+			font-size: 24px;
+			margin-top: 0;
+			color: #333333;
+		}
+
+		p {
+			font-size: 16px;
+			color: #666666;
+		}
+
+		.signature {
+			margin-top: 40px;
+		}
+
+		.signature p {
+			margin-bottom: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div class="container">
+		<p>Dear {{contractName}},</p>
+
+		<p><b>{{contractName}}</b> <b>{{contract_type}}</b> Contract with reference Number: <b>{{contract_token}}</b> has been rejected by <b>{{action_by}}</b> on <b>{{action_date}}</b> for the below reason.</p>
+
+		<p>Contract reject-reason: <b>{{comment}}</b></p>
+
+		<div class="signature">
+			<p>With Best Regards,</p>
+			<p>Tech M Global Chess League</p>
+		</div>
+	</div>
+</body>
+</html>
